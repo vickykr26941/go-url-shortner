@@ -1,3 +1,35 @@
+## URL Shortener Service (Under Development)
+This project is a self learning exercise in Go, PostgreSQL, and Redis. It is a URL shortener service that allows users to shorten long URLs, track analytics, and manage user accounts. The project is structured to follow best practices in Go development, including modular design, dependency management, and testing.
+
+
+![Go](https://img.shields.io/badge/Go-1.24-blue.svg)
+This is a URL shortener service built with Go, PostgreSQL, and Redis. It provides features such as URL shortening, analytics, user authentication, and caching.
+## Features
+- URL shortening with custom aliases
+- Analytics for shortened URLs
+- User authentication and management
+- Rate limiting
+- Caching with Redis
+- Prometheus metrics
+- Structured logging
+- Multi-stage Docker build
+- Kubernetes deployment
+- Comprehensive tests (unit, integration)
+- API documentation
+- Web interface with templates
+- Configuration management
+- Middleware for authentication, rate limiting, and logging
+- Input validation
+- GitHub Actions for CI/CD
+- Build automation with Makefile
+- Environment variable management
+- Multi-environment configuration (development, production)
+- Support for multiple database migrations
+- Static file serving for web assets
+- Support for custom error handling
+- Support for custom URL encoding/decoding
+
+
 ```azure
 url-shortener/
 ├── cmd/
