@@ -1,7 +1,13 @@
 package models
 
 import (
+	"fmt"
 	"time"
+)
+
+const (
+	MAX_DAILY_URL_COUNT   = 1000  // Maximum URLs a user can create in a day
+	MAX_DAILY_CLICK_COUNT = 10000 // Maximum clicks a user can have in a day
 )
 
 type User struct {
@@ -63,20 +69,45 @@ type APIKeyResponse struct {
 }
 
 func (u *User) CanCreateURL() bool {
-	// TODO: Check if user can create more URLs based on limits
+	if u.DailyURLCount < MAX_DAILY_URL_COUNT {
+		return true
+	}
 	return false
 }
 
 func (u *User) GetDailyURLLimit() int {
-	// TODO: Return daily URL creation limit based on user type
-	return 0
+	return MAX_DAILY_URL_COUNT
 }
 
 func (u *User) GetDailyClickLimit() int {
-	// TODO: Return daily click limit based on user type
-	return 0
+	return MAX_DAILY_CLICK_COUNT
 }
 
 func (u *User) ResetDailyCounts() {
-	// TODO: Reset daily counters if date has changed
+	u.DailyURLCount = 0
+}
+
+func (u *RegisterRequest) ValidateCreateRequest() error {
+	switch {
+	case u.Email == "":
+		return fmt.Errorf("email is required")
+	case u.Name == "":
+		return fmt.Errorf("name is required")
+	case u.Password == "" || u.ConfirmPassword == "":
+		return fmt.Errorf("password and confirm password are required")
+	case u.Password != u.ConfirmPassword:
+		return fmt.Errorf("passwords do not match")
+	}
+	return nil
+}
+
+func (u *LoginRequest) ValidateLoginRequest() error {
+	switch {
+	case u.Email == "":
+		return fmt.Errorf("email is required")
+	case u.Password == "":
+		return fmt.Errorf("password is required")
+	}
+	return nil
+
 }

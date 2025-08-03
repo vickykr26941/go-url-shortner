@@ -2,7 +2,9 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/vickykumar/url_shortner/internal/models"
 	"github.com/vickykumar/url_shortner/internal/service"
+	"net/http"
 )
 
 type AuthHandler struct {
@@ -16,23 +18,61 @@ func NewAuthHandler(authService service.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	// TODO: Parse registration request
-	// TODO: Validate input
-	// TODO: Call service to register user
-	// TODO: Return success response with tokens
+	var req models.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	if err := req.ValidateCreateRequest(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	resp, err := h.authService.Register(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	// TODO: Parse login request
-	// TODO: Validate input
-	// TODO: Call service to authenticate user
-	// TODO: Return success response with tokens
+	var req models.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	if err := req.ValidateLoginRequest(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	resp, err := h.authService.Login(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	// TODO: Parse refresh token request
-	// TODO: Call service to refresh token
-	// TODO: Return new tokens
+	var req models.RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	resp, err := h.authService.RefreshToken(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -44,6 +84,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	// TODO: Get user from context
 	// TODO: Return user profile data
+
 }
 
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {

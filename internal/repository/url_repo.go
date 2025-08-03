@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"github.com/vickykumar/url_shortner/internal/models"
+	time2 "time"
 )
 
 type urlRepository struct {
@@ -15,21 +18,90 @@ func NewURLRepository(db *sql.DB) URLRepository {
 }
 
 func (r *urlRepository) Create(ctx context.Context, url *models.URL) error {
-	// TODO: Insert new URL into database
-	// TODO: Handle unique constraint violations
+	query := `INSERT INTO urls(id, short_code, original_url, user_id, title, description, created_at, updated_at, expires_at, is_active, click_count, is_custom, password_hash
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+
+	time := time2.Now()
+	url.CreatedAt = time
+	url.UpdatedAt = time
+
+	_, err := r.db.ExecContext(ctx, query,
+		url.ID,
+		url.ShortCode,
+		url.OriginalURL,
+		url.UserID,
+		url.Title,
+		url.Description,
+		url.CreatedAt,
+		url.UpdatedAt,
+		url.ExpiresAt,
+		url.IsActive,
+		url.ClickCount,
+		url.IsCustom,
+		url.PasswordHash,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to create url: %w", err)
+	}
 	return nil
 }
 
 func (r *urlRepository) GetByID(ctx context.Context, id int64) (*models.URL, error) {
-	// TODO: Retrieve URL by ID
-	// TODO: Handle not found case
-	return nil, nil
+	url := &models.URL{}
+	query := `SELECT id, short_code, original_url, user_id, title, description, created_at, updated_at, expires_at, is_active, click_count, is_custom, password_hash FROM urls WHERE id = $1`
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&url.ID,
+		&url.ShortCode,
+		&url.OriginalURL,
+		&url.UserID,
+		&url.Title,
+		&url.Description,
+		&url.CreatedAt,
+		&url.UpdatedAt,
+		&url.ExpiresAt,
+		&url.IsActive,
+		&url.ClickCount,
+		&url.IsCustom,
+		&url.PasswordHash,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("url with id %d not found", id)
+		}
+		return nil, fmt.Errorf("failed to get url by id: %w", err)
+	}
+
+	return url, nil
 }
 
 func (r *urlRepository) GetByShortCode(ctx context.Context, shortCode string) (*models.URL, error) {
-	// TODO: Retrieve URL by short code
-	// TODO: Check if URL is active and not expired
-	return nil, nil
+	time := time2.Now()
+	url := &models.URL{}
+	query := `SELECT id, short_code, original_url, user_id, title, description, created_at, updated_at, expires_at, is_active, click_count, is_custom, password_hash FROM urls WHERE short_code = $1 and is_active = true and expires_at > $2`
+	err := r.db.QueryRowContext(ctx, query, shortCode, time).Scan(
+		&url.ID,
+		&url.ShortCode,
+		&url.OriginalURL,
+		&url.UserID,
+		&url.Title,
+		&url.Description,
+		&url.CreatedAt,
+		&url.UpdatedAt,
+		&url.ExpiresAt,
+		&url.IsActive,
+		&url.ClickCount,
+		&url.IsCustom,
+		&url.PasswordHash,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("url with id %s not found", shortCode)
+		}
+		return nil, fmt.Errorf("failed to get url by id: %w", err)
+	}
+	return url, nil
 }
 
 func (r *urlRepository) Update(ctx context.Context, url *models.URL) error {

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/vickykumar/url_shortner/internal/database"
+	"strconv"
 	"time"
 )
 
@@ -37,83 +39,134 @@ type CacheService interface {
 }
 
 type cacheService struct {
-	redisClient interface{} // Redis client interface
-	memCache    interface{} // In-memory cache interface
+	redisClient *database.RedisClient
+	memCache    map[string]interface{}
 }
 
-func NewCacheService(redisClient, memCache interface{}) CacheService {
+func NewCacheService(redisClient *database.RedisClient) CacheService {
 	return &cacheService{
 		redisClient: redisClient,
-		memCache:    memCache,
+		memCache:    map[string]interface{}{},
 	}
 }
 
 func (s *cacheService) SetURL(ctx context.Context, shortCode, originalURL string, ttl time.Duration) error {
-	// TODO: Cache URL mapping in both memory and Redis
+	s.memCache[shortCode] = originalURL
+	err := s.redisClient.Set(ctx, shortCode, originalURL, ttl)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *cacheService) GetURL(ctx context.Context, shortCode string) (string, error) {
-	// TODO: Try memory cache first, then Redis
-	return "", nil
+	value := s.memCache[shortCode]
+	if value != nil {
+		return value.(string), nil
+	}
+	value, err := s.Get(ctx, shortCode)
+	if err != nil {
+		return "", err
+	}
+	return value.(string), nil
 }
 
 func (s *cacheService) DeleteURL(ctx context.Context, shortCode string) error {
-	// TODO: Delete from both caches
+	s.memCache[shortCode] = nil
+	err := s.redisClient.Del(ctx, shortCode)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *cacheService) IncrementRateLimit(ctx context.Context, key string, window time.Duration) (int64, error) {
 	// TODO: Increment counter with automatic expiration
+
+	limit, err := s.redisClient.Incr(ctx, key)
+	if err != nil {
+		return 0, err
+	}
+	if limit == 1 {
+
+	}
+
 	return 0, nil
 }
 
 func (s *cacheService) GetRateLimit(ctx context.Context, key string) (int64, error) {
-	// TODO: Get current rate limit count
-	return 0, nil
+	value := s.memCache[key]
+	if value != nil {
+		limit, err := strconv.ParseInt(value.(string), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return limit, nil
+	} else {
+		value, err := s.redisClient.Get(ctx, key)
+		if err != nil {
+			return 0, err
+		}
+		limit, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return limit, nil
+	}
 }
 
 func (s *cacheService) IncrementClickCount(ctx context.Context, urlID int64) error {
-	// TODO: Increment real-time click counter
+	_, err := s.redisClient.Incr(ctx, strconv.FormatInt(urlID, 10))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *cacheService) GetClickCount(ctx context.Context, urlID int64) (int64, error) {
-	// TODO: Get current click count
-	return 0, nil
+	value, err := s.redisClient.Get(ctx, strconv.FormatInt(urlID, 10))
+	if err != nil {
+		return 0, err
+	}
+	clickCount, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return clickCount, nil
 }
 
 func (s *cacheService) SetUserSession(ctx context.Context, token string, user interface{}, ttl time.Duration) error {
-	// TODO: Cache user session data
+	err := s.redisClient.Set(ctx, token, user, ttl)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *cacheService) GetUserSession(ctx context.Context, token string) (interface{}, error) {
-	// TODO: Retrieve user session data
-	return nil, nil
+	return s.redisClient.Get(ctx, token)
 }
 
 func (s *cacheService) DeleteUserSession(ctx context.Context, token string) error {
-	// TODO: Delete user session
-	return nil
+	return s.redisClient.Del(ctx, token)
 }
 
 func (s *cacheService) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	// TODO: Generic set operation
+	err := s.redisClient.Set(ctx, key, value, ttl)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *cacheService) Get(ctx context.Context, key string) (interface{}, error) {
-	// TODO: Generic get operation
-	return nil, nil
+	return s.redisClient.Get(ctx, key)
 }
 
 func (s *cacheService) Delete(ctx context.Context, key string) error {
-	// TODO: Generic delete operation
-	return nil
+	return s.redisClient.Del(ctx, key)
 }
 
 func (s *cacheService) Exists(ctx context.Context, key string) (bool, error) {
-	// TODO: Check if key exists
-	return false, nil
+	return s.redisClient.Exists(ctx, key)
 }

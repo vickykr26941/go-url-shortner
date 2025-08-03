@@ -1,6 +1,11 @@
 package config
 
-import "time"
+import (
+	"encoding/json"
+	"gopkg.in/yaml.v3"
+	"os"
+	"time"
+)
 
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
@@ -70,14 +75,48 @@ type MetricsConfig struct {
 	Port    string `yaml:"port"`
 }
 
-func Load(configPath string) (*Config, error) {
-	// TODO: Load configuration from file
-	// TODO: Override with environment variables
-	// TODO: Validate configuration
-	return nil, nil
+func Load(envKey string) (*Config, error) {
+	jsonFromEnv := os.Getenv(envKey)
+	ymlFile := false
+	var jsonFromYml []byte
+	var err error
+	if jsonFromEnv == "" {
+		jsonFromYml, err = os.ReadFile("internal/config/config.yml")
+		if err != nil {
+			return nil, err
+		}
+		ymlFile = true
+	}
+	var config Config
+	switch ymlFile {
+	case true:
+		err := yaml.Unmarshal(jsonFromYml, &config)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		err := json.Unmarshal([]byte(jsonFromEnv), &config)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
+	return &config, nil
 }
 
 func (c *Config) Validate() error {
-	// TODO: Validate all configuration fields
+	// validate and set default values for configurations
+	if c.Server.Port == "" {
+		c.Server.Port = "8080"
+	}
+	if c.Server.Host == "" {
+		c.Server.Host = "127.0.0.1"
+	}
+	if c.Server.ShutdownTimeout == 0 {
+		c.Server.ShutdownTimeout = 5 * time.Second
+	}
+
 	return nil
 }

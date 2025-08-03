@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"crypto/rand"
+	"encoding/hex"
+)
+
 const (
 	// Base62 characters for URL encoding
 	base62Chars     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -29,9 +34,11 @@ func DecodeBase62(str string) (int64, error) {
 }
 
 func GenerateAPIKey() (string, error) {
-	// TODO: Generate secure API key
-	// TODO: Use 32-byte random string encoded as hex
-	return "", nil
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 func GenerateRandomString(length int) (string, error) {
