@@ -53,14 +53,42 @@ type UserResponse struct {
 	LastLoginAt *time.Time `json:"last_login_at"`
 }
 
+type UserProfileResponse struct {
+	ID              int64      `json:"id" db:"id"`
+	Email           string     `json:"email" db:"email"`
+	Name            *string    `json:"name" db:"name"`
+	APIKey          *string    `json:"api_key" db:"api_key"`
+	IsPremium       bool       `json:"is_premium" db:"is_premium"`
+	CreatedAt       time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at" db:"updated_at"`
+	LastLoginAt     *time.Time `json:"last_login_at" db:"last_login_at"`
+	DailyURLCount   int        `json:"daily_url_count" db:"daily_url_count"`
+	DailyClickCount int        `json:"daily_click_count" db:"daily_click_count"`
+	LastResetDate   time.Time  `json:"last_reset_date" db:"last_reset_date"`
+}
+
 type UpdateUserRequest struct {
 	Name     *string `json:"name" validate:"omitempty,min=2,max=100"`
 	Email    *string `json:"email" validate:"omitempty,email"`
 	Password *string `json:"password" validate:"omitempty,min=8,max=50"`
 }
 
+type UpdatePassRequest struct {
+	Email       *string `json:"email" validate:"omitempty,email"`
+	OldPassword *string `json:"old_password" validate:"omitempty,min=8,max=50"`
+	NewPassword *string `json:"new_password" validate:"omitempty,min=8,max=50"`
+}
+
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
+	AccessToken  string `json:"access_token" validate:"required"`
+}
+
+// RefreshInfo Refresh Table --> in cache as of now.
+type RefreshInfo struct {
+	UserId       string `json:"user_id" validate:"required"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
+	Jti          string `json:"jti" validate:"required"`
 }
 
 type APIKeyResponse struct {
@@ -110,4 +138,11 @@ func (u *LoginRequest) ValidateLoginRequest() error {
 	}
 	return nil
 
+}
+
+func (r *RefreshTokenRequest) ValidateRefreshTokenRequest() error {
+	if r.AccessToken == "" || r.RefreshToken == "" {
+		return fmt.Errorf("access_token and refresh_token are required")
+	}
+	return nil
 }

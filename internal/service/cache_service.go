@@ -164,6 +164,7 @@ func (s *cacheService) Get(ctx context.Context, key string) (interface{}, error)
 }
 
 func (s *cacheService) Delete(ctx context.Context, key string) error {
+	// s.memCache[key] = nil
 	return s.redisClient.Del(ctx, key)
 }
 
