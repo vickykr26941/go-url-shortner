@@ -1,5 +1,5 @@
 ## URL Shortener Service (Under Development)
-This project is a self learning exercise in Go, Gin, Mysql,PostgreSQL,and Redis. It is a URL shortener service that allows users to shorten long URLs, track analytics, and manage user accounts. The project is structured to follow best practices in Go development, including modular design, dependency management, and testing.
+This project is a self learning exercise in Go, Gin, Mysql,PostgreSQL,Redis & Auth with JWT. It is a URL shortener service that allows users to shorten long URLs, track analytics, and manage user accounts. The project is structured to follow best practices in Go development, including modular design, dependency management, and testing.
 
 #### Go Learning (got to learn)
 1. Gin
@@ -10,6 +10,7 @@ This project is a self learning exercise in Go, Gin, Mysql,PostgreSQL,and Redis.
 6. Redis
 7. Go Cuncurrency
 8. Go package architecture
+9. JWT
 
 ![Go](https://img.shields.io/badge/Go-1.24-blue.svg)
 This is a URL shortener service built with Go, PostgreSQL, and Redis. It provides features such as URL shortening, analytics, user authentication, and caching.
