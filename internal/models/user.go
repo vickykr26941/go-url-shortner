@@ -79,7 +79,7 @@ type UpdatePassRequest struct {
 	NewPassword *string `json:"new_password" validate:"omitempty,min=8,max=50"`
 }
 
-type RefreshTokenRequest struct {
+type TokenData struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 	AccessToken  string `json:"access_token" validate:"required"`
 }
@@ -140,7 +140,7 @@ func (u *LoginRequest) ValidateLoginRequest() error {
 
 }
 
-func (r *RefreshTokenRequest) ValidateRefreshTokenRequest() error {
+func (r *TokenData) ValidateRefreshTokenRequest() error {
 	if r.AccessToken == "" || r.RefreshToken == "" {
 		return fmt.Errorf("access_token and refresh_token are required")
 	}

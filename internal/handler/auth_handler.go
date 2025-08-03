@@ -61,7 +61,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	var req models.RefreshTokenRequest
+	var req models.TokenData
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -77,7 +77,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	var req models.RefreshTokenRequest
+	var req models.TokenData
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -114,20 +114,76 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 }
 
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {
-	// TODO: Parse update request
-	// TODO: Get user from context
-	// TODO: Update user profile
-	// TODO: Return updated profile
+	var req models.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	err := h.authService.UpdateUserProfile(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (h *AuthHandler) GenerateAPIKey(c *gin.Context) {
-	// TODO: Get user from context
-	// TODO: Generate new API key
-	// TODO: Return API key response
+	// user should be logged in to generate api key
+
+	var userId = c.Param("userId")
+	var req models.TokenData
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if _, err := h.authService.ValidateToken(c, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	userIdInt, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	resp, err := h.authService.GenerateAPIKey(c, userIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *AuthHandler) RevokeAPIKey(c *gin.Context) {
-	// TODO: Get user from context
-	// TODO: Revoke API key
-	// TODO: Return success response
+	// user must be logged in to revoke api key
+	var userId = c.Param("userId")
+	var req models.TokenData
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if _, err := h.authService.ValidateToken(c, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	userIdInt, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	err = h.authService.RevokeAPIKey(c, userIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }

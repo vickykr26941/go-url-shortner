@@ -18,15 +18,18 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, req *models.RegisterRequest) (*models.LoginResponse, error)
 	Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error)
-	RefreshToken(ctx context.Context, req *models.RefreshTokenRequest) (*models.LoginResponse, error)
+	RefreshToken(ctx context.Context, req *models.TokenData) (*models.LoginResponse, error)
 	GenerateAPIKey(ctx context.Context, userID int64) (*models.APIKeyResponse, error)
 	RevokeAPIKey(ctx context.Context, userID int64) error
 	ChangePassword(ctx context.Context, userID int64, request *models.UpdatePassRequest) error
 
 	StoreRefreshToken(ctx context.Context, userID int64, refreshToken, jti string) error
-	Logout(ctx context.Context, req *models.RefreshTokenRequest) error
+	Logout(ctx context.Context, req *models.TokenData) error
 
 	GetUserProfile(ctx context.Context, userId int64) (*models.UserProfileResponse, error)
+	UpdateUserProfile(ctx context.Context, req *models.UpdateUserRequest) error
+
+	ValidateToken(ctx context.Context, req *models.TokenData) (*pkg.UserToken, error)
 }
 
 type authService struct {
@@ -129,7 +132,7 @@ func (s *authService) Login(ctx context.Context, req *models.LoginRequest) (*mod
 	return loginResponse, nil
 }
 
-func (s *authService) RefreshToken(ctx context.Context, req *models.RefreshTokenRequest) (*models.LoginResponse, error) {
+func (s *authService) ValidateToken(ctx context.Context, req *models.TokenData) (*pkg.UserToken, error) {
 	refreshData, err := s.cacheService.Get(ctx, req.RefreshToken)
 	if err != nil {
 		return nil, err
@@ -159,6 +162,15 @@ func (s *authService) RefreshToken(ctx context.Context, req *models.RefreshToken
 		return nil, fmt.Errorf("invalid refresh token")
 	}
 
+	return token, nil
+}
+
+func (s *authService) RefreshToken(ctx context.Context, req *models.TokenData) (*models.LoginResponse, error) {
+
+	token, err := s.ValidateToken(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 	userId, _ := strconv.ParseInt(token.UserId, 10, 64)
 	user, err := s.userRepo.GetByID(ctx, userId)
 	if err != nil {
@@ -166,7 +178,7 @@ func (s *authService) RefreshToken(ctx context.Context, req *models.RefreshToken
 	}
 
 	jti := uuid.New().String()
-	accessToken, refreshToken, err = s.GenerateJwtToken(ctx, user.ID, jti)
+	accessToken, refreshToken, err := s.GenerateJwtToken(ctx, user.ID, jti)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
 	}
@@ -339,7 +351,7 @@ func (s *authService) StoreRefreshToken(ctx context.Context, userID int64, refre
 	return nil
 }
 
-func (s *authService) Logout(ctx context.Context, req *models.RefreshTokenRequest) error {
+func (s *authService) Logout(ctx context.Context, req *models.TokenData) error {
 	err := s.cacheService.Delete(ctx, req.RefreshToken)
 	if err != nil {
 		return fmt.Errorf("failed to delete refresh token from cache: %w", err)
@@ -368,4 +380,24 @@ func (s *authService) GetUserProfile(ctx context.Context, userId int64) (*models
 	}
 
 	return response, nil
+}
+
+func (s *authService) UpdateUserProfile(ctx context.Context, request *models.UpdateUserRequest) error {
+	user, err := s.userRepo.GetByEmail(ctx, *request.Email)
+	if err != nil {
+		return fmt.Errorf("failed to get user by email: %w", err)
+	}
+
+	if user.PasswordHash != *request.Password {
+		return fmt.Errorf("password does not match")
+	}
+
+	user.Name = request.Name
+	user.Email = *request.Email
+	err = s.userRepo.Update(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return nil
 }
