@@ -10,22 +10,12 @@ This is a URL shortener service built with Go, PostgreSQL, and Redis. It provide
 - User authentication and management
 - Rate limiting
 - Caching with Redis
-- Prometheus metrics
 - Structured logging
-- Multi-stage Docker build
-- Kubernetes deployment
-- Comprehensive tests (unit, integration)
 - API documentation
-- Web interface with templates
 - Configuration management
 - Middleware for authentication, rate limiting, and logging
-- Input validation
-- GitHub Actions for CI/CD
-- Build automation with Makefile
-- Environment variable management
 - Multi-environment configuration (development, production)
-- Support for multiple database migrations
-- Static file serving for web assets
+- Support for multiple database config(postgres, mysql etc)
 - Support for custom error handling
 - Support for custom URL encoding/decoding
 
