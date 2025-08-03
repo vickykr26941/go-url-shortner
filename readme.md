@@ -7,8 +7,9 @@ This project is a self learning exercise in Go, Gin, Mysql,PostgreSQL,and Redis.
 3. Cobra
 4. Postgres
 5. Mysql
-6. Go Cuncurrency
-7. Go package architecture
+6. Redis
+7. Go Cuncurrency
+8. Go package architecture
 
 ![Go](https://img.shields.io/badge/Go-1.24-blue.svg)
 This is a URL shortener service built with Go, PostgreSQL, and Redis. It provides features such as URL shortening, analytics, user authentication, and caching.
