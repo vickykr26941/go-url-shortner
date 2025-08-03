@@ -54,6 +54,7 @@ type AuthConfig struct {
 	RefreshTokenExpiry time.Duration `yaml:"refresh_token_expiry"`
 	PasswordMinLength  int           `yaml:"password_min_length"`
 	BCryptCost         int           `yaml:"bcrypt_cost"`
+	ServiceUrl         string        `yaml:"service_url"`
 }
 
 type CacheConfig struct {
