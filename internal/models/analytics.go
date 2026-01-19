@@ -19,6 +19,10 @@ type Analytics struct {
 	UTMCampaign *string   `json:"utm_campaign" db:"utm_campaign"`
 }
 
+func TableName() string {
+	return "analytics"
+}
+
 type AnalyticsRequest struct {
 	IPAddress   string  `json:"ip_address"`
 	UserAgent   string  `json:"user_agent"`

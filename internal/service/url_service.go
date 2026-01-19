@@ -13,6 +13,8 @@ import (
 type URLService interface {
 	CreateURL(ctx context.Context, userID *int64, req *models.CreateURLRequest) (*models.URLResponse, error)
 	GetURL(ctx context.Context, id int64, userID *int64) (*models.URLResponse, error)
+
+	GetURLByShortCode(ctx context.Context, shortCode string) (*models.URLResponse, error)
 	UpdateURL(ctx context.Context, id int64, userID int64, req *models.UpdateURLRequest) (*models.URLResponse, error)
 	DeleteURL(ctx context.Context, id int64, userID int64) error
 	ListURLs(ctx context.Context, userID int64, req *models.URLListRequest) ([]*models.URLResponse, int64, error)

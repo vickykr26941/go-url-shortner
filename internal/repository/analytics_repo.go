@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/vickykumar/url_shortner/internal/models"
 	"time"
+
+	"github.com/vickykumar/url_shortner/internal/models"
 )
 
 type analyticsRepository struct {

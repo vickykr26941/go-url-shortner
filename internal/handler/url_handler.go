@@ -2,7 +2,10 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/vickykumar/url_shortner/internal/models"
 	"github.com/vickykumar/url_shortner/internal/service"
+	"net/http"
+	"strconv"
 )
 
 type URLHandler struct {
@@ -18,11 +21,25 @@ func NewURLHandler(urlService service.URLService, analyticsService service.Analy
 }
 
 func (h *URLHandler) CreateURL(c *gin.Context) {
-	// TODO: Parse request body
-	// TODO: Validate input
-	// TODO: Get user from context
-	// TODO: Call service to create URL
-	// TODO: Return response
+	var userId = c.Param("user_id")
+	var req models.CreateURLRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := req.ValidateCreateUrl(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	userIdInt, _ := strconv.ParseInt(userId, 10, 64)
+	resp, err := h.urlService.CreateURL(c, &userIdInt, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
 
 func (h *URLHandler) GetURL(c *gin.Context) {
@@ -30,6 +47,7 @@ func (h *URLHandler) GetURL(c *gin.Context) {
 	// TODO: Get user from context
 	// TODO: Call service to get URL
 	// TODO: Return response
+	
 }
 
 func (h *URLHandler) UpdateURL(c *gin.Context) {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 )
 
@@ -74,4 +75,11 @@ func (u *URL) HasPassword() bool {
 func (u *URL) ValidatePassword(password string) bool {
 	// TODO: Validate password against hash
 	return false
+}
+
+func (u *CreateURLRequest) ValidateCreateUrl() error {
+	if u.OriginalURL == "" {
+		return errors.New("OriginalURL is required")
+	}
+	return nil
 }
